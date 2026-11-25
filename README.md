@@ -97,23 +97,13 @@ instala dependencias y Chromium, verifica tipos, ejecuta el test y publica dos a
 | El radio del vendor se marca ~1 s después, cuando cambia la URL | `click()` y espera de la URL y del radio marcado |
 | El catálogo del vendor cambia (se vieron 16, 8, 3 y 0 productos) | Si hay 0 productos o falta el producto, el test **falla con un mensaje claro** |
 | Los totales del checkout cargan de forma asíncrona | Espera a que desaparezca "Confirming your order total…" |
-| El Tax cambia solo unos segundos después de abrir el checkout | Ver BUG-001 |
+| El Tax cambia solo unos segundos después de abrir el checkout | Valida el total con el valor final y deja una anotación `BUG-001` en el reporte, sin fallar |
 
-## 8. Bugs encontrados
+## 8. Bugs encontrados y supuestos
 
-| ID | Resumen | Efecto en el test |
-|----|---------|-------------------|
-| **BUG-001** | En Checkout el Tax cambia solo, sin acción del usuario, unos segundos después de cargar (por ejemplo $1.39 → $0.67, total $19.87 → $19.15). | **No falla.** Valida el total con el valor final y deja una anotación `BUG-001` en el reporte con ambos valores, más las capturas 07 (inicial) y 08 (final). |
-| **BUG-002** | El menú del vendor OLO quedó sin productos ("No items in this category yet") durante varios minutos, dos veces el mismo día. | **Falla** en el paso 3 con el mensaje "El menú del vendor no tiene productos (0 items)…". |
-| **BUG-003** | Al agregar Bacon con "Add", el detalle marca "Regular", pero el resumen, Bag y Checkout muestran "Bacon — Add". El precio no cambia. | Para no depender de ese texto, el test valida el **nombre del extra y su costo**. |
+Los bugs encontrados (con pasos para reproducir y evidencia) y los supuestos de la prueba están en el
+**[documento de entrega en Google Drive](URL_DOCUMENTO_DRIVE)**.
 
-## 9. Supuestos y decisiones
+## 9. Pasos no completados
 
-- El **"+" del apartado Summary** es el de la barra inferior del producto, junto al link "Summary". El modal "Summary" muestra el resumen de la selección y no tiene botones de cantidad.
-- Bacon cuesta lo mismo en "Regular" y en "Extra" (+$1.00). El test lo agrega con "Add" y toma el costo que indica la UI.
-- Se ejecuta solo en **Chromium**.
-- El flujo se ejecuta como **invitado**, sin iniciar sesión.
-
-## 10. Pasos no completados
-
-Ninguno: el flujo de Menu a Checkout se completa sin pagar. Las caídas del menú (BUG-002) se resolvieron solas y se documentaron con evidencia.
+Ninguno: el flujo de Menu a Checkout se completa sin pagar.
