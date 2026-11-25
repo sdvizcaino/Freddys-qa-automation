@@ -1,0 +1,57 @@
+name: Playwright E2E · Freddy's demo
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: # permite ejecutarlo a mano desde la pestaña Actions
+
+# Una sola ejecución a la vez: el demo es un entorno compartido.
+concurrency:
+  group: e2e-freddys-demo
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: ESC-01 Menu → Checkout (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Instalar el navegador Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Verificar tipos de TypeScript
+        run: npm run typecheck
+
+      - name: Ejecutar el escenario E2E
+        run: npx playwright test
+
+      - name: Publicar reporte HTML (incluye trace y anotaciones de bugs)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Publicar evidencias (capturas con recuadro rojo y video)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias
+          path: evidencias/
+          retention-days: 14
