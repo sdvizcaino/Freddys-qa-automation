@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * Configuración de Playwright para el demo de Freddy's.
  * - 1 worker: el demo es un entorno compartido; los tests corren uno a la vez.
+ * - Dos navegadores: Chromium y WebKit (motor de Safari).
  * - Video, screenshot y trace siempre activos: son la evidencia de la ejecución,
  *   también cuando el test pasa.
  */
@@ -27,6 +28,10 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
 });

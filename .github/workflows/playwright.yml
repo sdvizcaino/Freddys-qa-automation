@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   e2e:
-    name: ESC-01 Menu → Checkout (Chromium)
+    name: ESC-01 Menu → Checkout (Chromium y WebKit)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -31,8 +31,8 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      - name: Instalar el navegador Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Instalar los navegadores Chromium y WebKit
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Verificar tipos de TypeScript
         run: npm run typecheck

@@ -41,16 +41,17 @@ export function resetEvidenceCounter(): void {
 
 /**
  * Toma una captura de la pantalla actual, la guarda en
- * evidencias/<escenario>/NN_<nombre>.png y la adjunta al reporte HTML.
+ * evidencias/<navegador>/<escenario>/NN_<nombre>.png y la adjunta al reporte HTML.
  * Con fullPage = true captura la página completa.
  */
 export async function takeEvidence(page: Page, testInfo: TestInfo, name: string, fullPage = false): Promise<void> {
   screenshotCounter += 1;
-  const scenario = getScenarioId(testInfo);
   const fileName = `${String(screenshotCounter).padStart(2, '0')}_${name}.png`;
-  const path = `evidencias/${scenario}/${fileName}`;
+  const path = `${getEvidenceFolder(testInfo)}/${fileName}`;
 
-  await page.screenshot({ path, fullPage, style: fullPage ? FULL_PAGE_STYLE : undefined });
+  // animations: 'disabled' termina las transiciones CSS (p. ej. el selector Regular/Extra
+  // que se desliza) para que la captura muestre el estado final y no uno intermedio.
+  await page.screenshot({ path, fullPage, animations: 'disabled', style: fullPage ? FULL_PAGE_STYLE : undefined });
   await testInfo.attach(fileName, { path, contentType: 'image/png' });
   await clearHighlights(page);
 }
@@ -59,4 +60,9 @@ export async function takeEvidence(page: Page, testInfo: TestInfo, name: string,
 export function getScenarioId(testInfo: TestInfo): string {
   const match = testInfo.titlePath.join(' ').match(/ESC-\d+/);
   return match ? match[0] : 'sin-escenario';
+}
+
+/** Carpeta de evidencias de la ejecución: evidencias/<navegador>/<escenario>. */
+export function getEvidenceFolder(testInfo: TestInfo): string {
+  return `evidencias/${testInfo.project.name}/${getScenarioId(testInfo)}`;
 }

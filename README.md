@@ -66,8 +66,9 @@ El botón **Place Order nunca se pulsa**.
 
 ```bash
 npm ci
-npx playwright install chromium
-npm test                 # ejecución headless
+npx playwright install chromium webkit
+npm test                 # ejecución headless en Chromium y WebKit
+npx playwright test --project=chromium   # un solo navegador
 npm run test:headed      # viendo el navegador
 npm run report           # abre el reporte HTML
 npm run typecheck        # verificación de tipos
@@ -79,15 +80,15 @@ Cada ejecución genera:
 
 | Evidencia | Dónde |
 |-----------|-------|
-| Capturas con **recuadro rojo** sobre lo validado (01 a 08) | `evidencias/ESC-01/NN_<paso>.png` y adjuntas al reporte |
-| Video de la ejecución | `evidencias/ESC-01/video_OK.webm` (o `video_FAIL.webm`) |
+| Capturas con **recuadro rojo** sobre lo validado (01 a 08) | `evidencias/<navegador>/ESC-01/NN_<paso>.png` y adjuntas al reporte |
+| Video de la ejecución | `evidencias/<navegador>/ESC-01/video_OK.webm` (o `video_FAIL.webm`) |
 | Reporte HTML con pasos, anotaciones y trace | `playwright-report/` |
 | Trace (siempre activo, también si el test pasa) | dentro del reporte / `test-results/` |
 
 ## 6. CI (GitHub Actions)
 
 `.github/workflows/playwright.yml` se ejecuta en cada push o pull request a `main`, y a mano desde la pestaña **Actions**:
-instala dependencias y Chromium, verifica tipos, ejecuta el test y publica dos artifacts: `playwright-report` y `evidencias`.
+instala dependencias, Chromium y WebKit, verifica tipos, ejecuta el test y publica dos artifacts: `playwright-report` y `evidencias`.
 
 ## 7. Comportamientos del demo que el test contempla
 
