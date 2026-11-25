@@ -102,7 +102,7 @@ instala dependencias y Chromium, verifica tipos, ejecuta el test y publica dos a
 ## 8. Bugs encontrados y supuestos
 
 Los bugs encontrados (con pasos para reproducir y evidencia) y los supuestos de la prueba están en el
-**[documento de entrega en Google Drive](URL_DOCUMENTO_DRIVE)**.
+**[documento de entrega en Google Drive](https://drive.google.com/file/d/1yi8lKgt46vAc9usJI1IZsl3bpkdPk08I/view?usp=drivesdk)**.
 
 ## 9. Pasos no completados
 
