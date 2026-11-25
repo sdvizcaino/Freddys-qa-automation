@@ -1,0 +1,27 @@
+# --- Documentos internos de trabajo (no se publican) ---
+01_ANALISIS.md
+02_PLANIFICACION.md
+SDD.md
+tracker.md
+*.docx
+*.pdf
+
+# --- Node / Playwright ---
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# --- Evidencias generadas en cada ejecución ---
+evidencias/
+
+# --- Variables de entorno ---
+.env
+.env.*
+
+# --- Sistema operativo / editores ---
+.DS_Store
+Thumbs.db
+.idea/
+*.log

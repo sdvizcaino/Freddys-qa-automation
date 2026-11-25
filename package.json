@@ -1,0 +1,20 @@
+{
+  "name": "freddys-qa-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Prueba E2E de Freddy's (demo) con Playwright + TypeScript + Page Object Model: de Menu a Checkout sin pagar",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "22.20.7",
+    "typescript": "5.9.3"
+  }
+}
