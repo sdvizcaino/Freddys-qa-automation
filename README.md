@@ -103,4 +103,4 @@ instala dependencias, Chromium y WebKit, verifica tipos, ejecuta el test y publi
 ## 8. Bugs encontrados y supuestos
 
 Los bugs encontrados (con pasos para reproducir y evidencia) y los supuestos de la prueba están en el
-**[documento de entrega en Google Drive](https://drive.google.com/file/d/1yi8lKgt46vAc9usJI1IZsl3bpkdPk08I/view?usp=drivesdk)**.
+**[documento de entrega en Google Drive](https://drive.google.com/file/d/1ejrGLKsFuG1KRxxorIjgIRCWYSVuuaVJ/view?usp=drivesdk)**.
