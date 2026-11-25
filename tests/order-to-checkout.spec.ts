@@ -2,20 +2,62 @@ import { test, expect } from '../fixtures/evidence';
 import { Header } from '../components/Header';
 import { MenuPage } from '../pages/MenuPage';
 import { ProductPage, SelectedExtra } from '../pages/ProductPage';
+import { BagPage } from '../pages/BagPage';
+import { CheckoutAmounts, CheckoutPage } from '../pages/CheckoutPage';
 import { order } from '../data/order';
 import { highlight, takeEvidence } from '../utils/evidence';
 import { formatCents } from '../utils/money';
+
+/**
+ * Regla del enunciado: total = subtotal + taxes + fees − discounts + tip,
+ * usando solo los conceptos que el checkout muestra. No se asume un % de tax.
+ * Si aparece un concepto no contemplado, el test falla para no ignorarlo en silencio.
+ */
+function expectedCheckoutTotal(amounts: CheckoutAmounts): number {
+  let total = 0;
+  for (const [concept, cents] of Object.entries(amounts)) {
+    if (/^Subtotal$/i.test(concept) || /tax/i.test(concept) || /fee/i.test(concept) || /tip/i.test(concept)) {
+      total += cents;
+    } else if (/discount/i.test(concept)) {
+      total -= cents;
+    } else if (!/^Order Total$/i.test(concept)) {
+      throw new Error(`Concepto del checkout no contemplado en la fórmula: "${concept}"`);
+    }
+  }
+  return total;
+}
 
 test.describe('ESC-01 Pedido personalizado desde Menu hasta Checkout', () => {
   test('Personalizar un producto OLO y llegar al checkout con precios consistentes', async ({ page }, testInfo) => {
     const header = new Header(page);
     const menu = new MenuPage(page);
     const product = new ProductPage(page);
+    const bag = new BagPage(page);
+    const checkout = new CheckoutPage(page);
 
     // Valores leídos de la UI que se reutilizan en los pasos siguientes (en centavos).
     let basePrice = 0;
     let extras: SelectedExtra[] = [];
     let quantity = 0;
+    let bagLineTotal = 0;
+
+    /**
+     * Verifica que un texto (Bag o Checkout) muestre los extras elegidos con su costo.
+     * - Ingredientes en Extra: texto exacto, por ejemplo "American Cheese — Extra ($0.75)".
+     * - Extras agregados con "Add": nombre + costo, sin fijar la palabra que acompaña
+     *   ("Add" o "Regular"), porque hoy es inconsistente (BUG-003).
+     */
+    const expectExtrasIn = (text: string, where: string) => {
+      for (const extra of extras) {
+        const cost = `(${formatCents(extra.cents)})`;
+        if (order.extraToppings.includes(extra.name)) {
+          expect(text, `${where}: ${extra.name} en Extra`).toContain(`${extra.name} — Extra ${cost}`);
+        } else {
+          const extraLine = text.split('\n').find((part) => part.includes(`${extra.name} — `)) ?? '';
+          expect(extraLine, `${where}: extra ${extra.name} con su costo`).toContain(cost);
+        }
+      }
+    };
 
     await test.step('1. Acceder a la aplicación y hacer clic en Menu', async () => {
       await page.goto('/en');
@@ -116,6 +158,65 @@ test.describe('ESC-01 Pedido personalizado desde Menu hasta Checkout', () => {
       await highlight(product.addedConfirmation);
       await highlight(header.bagIcon);
       await takeEvidence(page, testInfo, 'confirmacion_y_contador_bag');
+    });
+
+    await test.step('10. Abrir Bag mediante su icono', async () => {
+      await header.openBag();
+
+      await expect(page).toHaveURL(/\/en\/cart/);
+    });
+
+    await test.step('11. Comprobar producto, extras, cantidad y precios en Bag', async () => {
+      const line = await bag.readLine(order.product);
+      const unitPrice = basePrice + extras.reduce((sum, extra) => sum + extra.cents, 0);
+      bagLineTotal = line.lineTotal;
+
+      expectExtrasIn(line.modifiersText, 'Bag');
+      expect(line.quantity, 'Bag: cantidad').toBe(quantity);
+      expect(line.unitPrice, `Bag: precio unitario = ${formatCents(unitPrice)}`).toBe(unitPrice);
+      expect(line.lineTotal, `Bag: total de la línea = ${formatCents(unitPrice)} × ${quantity}`).toBe(unitPrice * quantity);
+
+      await highlight(bag.line(order.product));
+      await takeEvidence(page, testInfo, 'bag_producto_extras_cantidad_precio');
+    });
+
+    await test.step('12. Hacer clic en "Continue to checkout"', async () => {
+      await bag.continueToCheckout();
+
+      await expect(checkout.title).toBeVisible();
+    });
+
+    await test.step('13. Validar el pedido y los totales del checkout', async () => {
+      await checkout.waitForTotals();
+      const initialAmounts = await checkout.amounts();
+      await highlight(checkout.amountsList);
+      await takeEvidence(page, testInfo, 'checkout_totales_iniciales', true);
+
+      // BUG-001: el Tax puede cambiar solo unos segundos después. Se valida con el valor final.
+      await checkout.waitForPaymentReady();
+      const amounts = await checkout.amounts();
+      if (initialAmounts['Tax'] !== amounts['Tax']) {
+        const description =
+          `Tax inicial ${formatCents(initialAmounts['Tax'])} → final ${formatCents(amounts['Tax'])} ` +
+          `(Order Total ${formatCents(initialAmounts['Order Total'])} → ${formatCents(amounts['Order Total'])})`;
+        testInfo.annotations.push({ type: 'BUG-001', description });
+        console.log(`BUG-001 observado: ${description}`);
+      }
+
+      const summaryText = await checkout.orderSummary.innerText();
+      expect(summaryText, 'Checkout: producto').toContain(order.product);
+      expectExtrasIn(summaryText, 'Checkout');
+      expect(summaryText, 'Checkout: cantidad').toContain(`Quantity: ${quantity}`);
+
+      expect(amounts['Subtotal'], 'Checkout: subtotal = total de la línea en Bag').toBe(bagLineTotal);
+      const expectedTotal = expectedCheckoutTotal(amounts);
+      expect(amounts['Order Total'], `Checkout: total = subtotal + taxes + fees − discounts + tip = ${formatCents(expectedTotal)}`).toBe(expectedTotal);
+
+      // Se verifica que el botón de pago existe, pero nunca se pulsa.
+      await expect(checkout.placeOrderButton).toBeVisible();
+
+      await highlight(checkout.orderSummary);
+      await takeEvidence(page, testInfo, 'checkout_pedido_y_totales_finales', true);
     });
   });
 });

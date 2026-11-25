@@ -31,4 +31,10 @@ export class Header {
       await expect(this.page).toHaveURL(/\/en\/menu/, { timeout: 3_000 });
     }).toPass({ timeout: 20_000 });
   }
+
+  /** Abre Bag desde su icono del header y espera la página del carrito. */
+  async openBag(): Promise<void> {
+    await this.bagIcon.click();
+    await expect(this.page).toHaveURL(/\/en\/cart/);
+  }
 }
