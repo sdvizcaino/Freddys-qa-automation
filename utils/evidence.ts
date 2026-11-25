@@ -8,8 +8,29 @@ export async function highlight(locator: Locator): Promise<void> {
   await locator.evaluate((element: HTMLElement) => {
     element.style.outline = '3px solid red';
     element.style.outlineOffset = '2px';
+    element.setAttribute('data-evidence', 'true');
   });
 }
+
+/** Quita los recuadros para que no aparezcan en la siguiente captura. */
+async function clearHighlights(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    document.querySelectorAll<HTMLElement>('[data-evidence]').forEach((element) => {
+      element.style.outline = '';
+      element.style.outlineOffset = '';
+      element.removeAttribute('data-evidence');
+    });
+  });
+}
+
+/**
+ * En capturas de página completa, el header y la barra inferior (fijos) aparecerían
+ * repetidos en medio de la imagen. Se vuelven estáticos solo durante la captura.
+ */
+const FULL_PAGE_STYLE = `
+  header.site-header, .menu-customizer-actions { position: static !important; }
+  .skip-link { display: none !important; }
+`;
 
 /** Número de captura por test, para que las imágenes queden en orden. */
 let screenshotCounter = 0;
@@ -29,8 +50,9 @@ export async function takeEvidence(page: Page, testInfo: TestInfo, name: string,
   const fileName = `${String(screenshotCounter).padStart(2, '0')}_${name}.png`;
   const path = `evidencias/${scenario}/${fileName}`;
 
-  await page.screenshot({ path, fullPage });
+  await page.screenshot({ path, fullPage, style: fullPage ? FULL_PAGE_STYLE : undefined });
   await testInfo.attach(fileName, { path, contentType: 'image/png' });
+  await clearHighlights(page);
 }
 
 /** Toma el ID del escenario desde el título del describe, por ejemplo "ESC-01". */

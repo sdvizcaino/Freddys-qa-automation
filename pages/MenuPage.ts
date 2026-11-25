@@ -1,4 +1,5 @@
 import { Locator, Page, expect } from '@playwright/test';
+import { toCents } from '../utils/money';
 
 /**
  * Página del menú: selección del vendor y listado de productos.
@@ -55,5 +56,29 @@ export class MenuPage {
   /** Cantidad de productos visibles en el menú. */
   async productCount(): Promise<number> {
     return this.productButtons.count();
+  }
+
+  /** Tarjeta de un producto del menú (nombre, precio, descripción y botón). */
+  productCard(productName: string): Locator {
+    return this.page
+      .locator('.menu-product-copy')
+      .filter({ has: this.page.getByRole('heading', { name: productName, exact: true }) });
+  }
+
+  /**
+   * Precio que muestra la tarjeta del producto, en centavos.
+   * Si el producto no está en el menú, falla rápido con un mensaje claro
+   * (el catálogo del demo cambia: se observaron 16, 8, 3 y 0 productos).
+   */
+  async productCardPrice(productName: string): Promise<number> {
+    const card = this.productCard(productName);
+    await expect(card, `El producto "${productName}" no está disponible en el menú del vendor`).toBeVisible();
+    return toCents(await card.locator('.menu-product-price').innerText());
+  }
+
+  /** Abre el detalle del producto con su botón "View details". */
+  async openProduct(productName: string): Promise<void> {
+    await this.page.getByRole('button', { name: `View details for ${productName}` }).click();
+    await expect(this.page.getByRole('heading', { name: productName, level: 1 })).toBeVisible();
   }
 }
